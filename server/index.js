@@ -9,7 +9,7 @@ app.use(express.json())
 
 
 
-const GEMINI_API_KEY = "AIzaSyBS4dvqMniE_9Pg50lrLCQuz4ULGfr4VP4";
+const GEMINI_API_KEY =process.env.Gemini_Apikey;
 
 const ai = new GoogleGenAI({apiKey: GEMINI_API_KEY});
 

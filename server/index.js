@@ -1,10 +1,11 @@
 const express = require("express");
 require("dotenv").config();
 const cors = require("cors")
-const {GoogleGenAI} = require('@google/genai')
+const { GoogleGenAI } = require('@google/genai')
 const mongoose = require("mongoose");
-const {UserRouter} = require("./router/user");
-require("dotenv").config( {path:"../.env" });
+const { UserRouter } = require("./router/user");
+require("dotenv").config({ path: "../.env" });
+const axios = require('axios');
 // const cors = require("cors");
 
 const app = express();
@@ -13,7 +14,7 @@ app.use(cors());
 app.use(express.json());
 
 const GEMINI_API_KEY = process.env.Gemini_Apikey;
-const ai = new GoogleGenAI({apiKey: GEMINI_API_KEY});
+const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 
 // LinkedIn Post Generation Function
 async function generateLinkedInPost(topic, tone) {
@@ -48,11 +49,11 @@ Format the response as:
       model: 'gemini-2.0-flash-001',
       contents: prompt,
     });
-    
+
     // Parse the response to extract structured data
     const responseText = response.text;
     console.log(responseText);
-    
+
     // Try to parse as JSON, if not, format it manually
     try {
       console.log(JSON.parse(responseText));
@@ -77,11 +78,11 @@ Format the response as:
 // app.post("/api/generate-post", async (req, res) => {
 //   try {
 //     const { topic, tone, industry } = req.body;
-    
+
 //     if (!topic) {
 //       return res.status(400).json({ error: "Topic is required" });
 //     }
-    
+
 //     const post = await generateLinkedInPost(topic, tone);
 //     res.json(post);
 //   } catch (error) {
@@ -96,28 +97,31 @@ app.get("/", (req, res) => {
 
 app.use("/user", UserRouter)
 
-const PORT = 3000;
-app.listen(PORT, () => {
-  console.log(`Server started and running at ${PORT}`);
-});
 
 // Test the function
 generateLinkedInPost("Generate a post on the score between England vs India first test match 2025 at Headingley", "informative");
 
 async function connectDB() {
-    try {
-        await mongoose.connect(process.env.MONGO_URI, {
-            useNewUrlParser: true,
-            useUnifiedTopology: true
-        });
-        console.log("Connected to MongoDB");
-        app.listen(PORT, () => {
-            console.log(`server started and running at ${PORT}`);
-        });
-    } catch (e) {
-        console.error("Error connecting to MongoDB:", e);
-        process.exit(1); // Exit the process if DB connection fails
-    }
+  try {
+    await mongoose.connect(process.env.MONGO_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true
+    });
+    console.log("Connected to MongoDB");
+    app.listen(PORT, () => {
+      console.log(`server started and running at ${PORT}`);
+      console.log('CLIENT_ID:', process.env.LINKEDIN_CLIENT_ID);
+      console.log('CLIENT_SECRET:', process.env.LINKEDIN_CLIENT_SECRET);
+    });
+  } catch (e) {
+    console.error("Error connecting to MongoDB:", e);
+    process.exit(1); // Exit the process if DB connection fails
+  }
 }
-
+const PORT = 3000;
+app.listen(PORT, () => {
+  console.log(`Server started and running at ${PORT}`);
+  console.log('CLIENT_ID:', process.env.LINKEDIN_CLIENT_ID);
+  console.log('CLIENT_SECRET:', process.env.LINKEDIN_CLIENT_SECRET);
+});
 connectDB();

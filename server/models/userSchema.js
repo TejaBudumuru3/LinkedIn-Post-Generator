@@ -23,7 +23,7 @@ const userSchema = new  mongo.Schema({
         default: Date.now
     }
 });
-const UserModel = mongo.model("User",userSchema, "UserTable" )
+const UserModel = mongo.model("User",userSchema, "Linkedin USerData" )
 module.exports ={
     UserModel
 }

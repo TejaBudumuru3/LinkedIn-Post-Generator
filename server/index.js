@@ -3,9 +3,9 @@ require("dotenv").config();
 const cors = require("cors")
 const {GoogleGenAI} = require('@google/genai')
 const mongoose = require("mongoose");
-const Router = require("./router/user");
+const {UserRouter} = require("./router/user");
 require("dotenv").config( {path:"../.env" });
-const cors = require("cors");
+// const cors = require("cors");
 
 const app = express();
 
@@ -94,9 +94,9 @@ app.get("/", (req, res) => {
   res.send("LinkedIn Post Generator Server Running");
 });
 
-app.use("/user", Router)
+app.use("/user", UserRouter)
 
-const PORT = 5000;
+const PORT = 3000;
 app.listen(PORT, () => {
   console.log(`Server started and running at ${PORT}`);
 });

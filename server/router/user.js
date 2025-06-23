@@ -133,7 +133,7 @@ UserRouter.post("/send-otp", async (req,res)=>{
         email,
         otp
       })
-      
+
 
       await sendEmail(
         email,
@@ -147,6 +147,29 @@ UserRouter.post("/send-otp", async (req,res)=>{
     res.status(500).json({ message: "Internal server error" }); 
   }
 })
+
+UserRouter.post("/verify-otp", async (req,res)=>{
+    const { email,otp } = req.body;
+    try{
+        const otpRecord = await OtpModel.findOne({ email});
+        if(!otpRecord)
+          return res.status(400).json({ message: " no OTPs" });
+        else{
+          const fetchOtp = await OtpModel.findOne({ email });
+          if(otp.equals(fetchOtp.otp)){
+            await UserModel.updateOne({ email }, { isVerified: true });
+            res.status(200).json({ message: "OTP verified successfully" });
+          }
+          else{
+            return res.status(400).json({ message: "Invalid OTP" });
+          }
+        }
+      }
+        catch(e){
+          res.status(500).json({ message: "Internal server error" });
+        }
+    });
+
 
 UserRouter.get("/generate-post", authMiddleware, async (req,res)=>{
     const GEMINI_API_KEY = process.env.Gemini_Apikey;

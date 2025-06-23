@@ -14,14 +14,14 @@ const userSchema = new  mongo.Schema({
         type: String,
         required: true
     },
-    // isVerified: {
-    //     type: Boolean,
-    //     default: false
-    // },
-    // createdAt: {
-    //     type: Date,
-    //     default: Date.now
-    // }
+    isVerified: {
+        type: Boolean,
+        default: false
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now
+    }
 });
 const UserModel = mongo.model("User",userSchema, "UserTable" )
 module.exports ={

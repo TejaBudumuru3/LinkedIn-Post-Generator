@@ -15,7 +15,7 @@ UserRouter.post("/register", async (req, res) => {
     if (EmailCheck) {
        return  res.status(400).json(
             {
-                message: "email alreay exsists try with a different one "
+                message: "email already exsists try with a different one "
             }
         )
     }

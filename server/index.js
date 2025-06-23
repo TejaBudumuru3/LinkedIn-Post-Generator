@@ -2,7 +2,6 @@ const express = require("express");
 require("dotenv").config();
 const cors = require("cors")
 const {GoogleGenAI} = require('@google/genai')
-const app = express()
 const mongoose = require("mongoose");
 const Router = require("./router/user");
 require("dotenv").config( {path:"../.env" });
@@ -93,9 +92,6 @@ Format the response as:
 
 app.get("/", (req, res) => {
   res.send("LinkedIn Post Generator Server Running");
-// Root route
-app.get("/", (req, res) => {
-    res.send("server running");
 });
 
 app.use("/user", Router)

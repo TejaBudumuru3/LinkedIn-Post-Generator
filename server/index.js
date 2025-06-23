@@ -1,10 +1,9 @@
+require("dotenv").config({ path: "../.env" });
 const express = require("express");
-require("dotenv").config();
 const cors = require("cors")
-const { GoogleGenAI } = require('@google/genai')
 const mongoose = require("mongoose");
 const { UserRouter } = require("./router/user");
-require("dotenv").config({ path: "../.env" });
+const cookieParser = require('cookie-parser');
 const axios = require('axios');
 // const cors = require("cors");
 
@@ -14,68 +13,44 @@ app.use(cors({
   origin : "http://localhost:5173/"}
 ));
 app.use(express.json());
+app.use(cookieParser())
 
-const GEMINI_API_KEY = process.env.Gemini_Apikey;
-const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
+
 
 // LinkedIn Post Generation Function
-async function generateLinkedInPost(topic, tone) {
-  const prompt = `
-Generate a LinkedIn post about: "${topic}"
+// async function generateLinkedInPost(topic, tone) {
+  
 
-Requirements:
-- Tone: ${tone}
-- Structure:
-  1. Hook (first line should grab attention)
-  2. 2-3 paragraphs of valuable content
-  3. Call-to-action for engagement
-  4. 3-5 relevant hashtags
-- Keep under 1,300 characters
-- Make it engaging and shareable
-- Include personal insights or experiences if relevant
-- Use bullet points or emojis sparingly but effectively
+//   try {
+//     const response = await ai.models.generateContent({
+//       model: 'gemini-2.0-flash-001',
+//       contents: prompt,
+//     });
 
-Format the response as:
-{
-  "hook": "attention-grabbing first line",
-  "content": "main content paragraphs",
-  "callToAction": "engagement prompt",
-  "hashtags": ["#hashtag1", "#hashtag2", "#hashtag3"],
-  "characterCount": 1234,
-  "fullPost": "complete formatted post"
-}
-`;
+//     // Parse the response to extract structured data
+//     const responseText = response.text;
+//     console.log(responseText);
 
-  try {
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.0-flash-001',
-      contents: prompt,
-    });
-
-    // Parse the response to extract structured data
-    const responseText = response.text;
-    console.log(responseText);
-
-    // Try to parse as JSON, if not, format it manually
-    try {
-      console.log(JSON.parse(responseText));
-      return JSON.parse(responseText);
-    } catch (parseError) {
-      // If JSON parsing fails, return a formatted structure
-      return {
-        hook: "Generated LinkedIn Post",
-        content: responseText,
-        callToAction: "What are your thoughts on this? Share below! 👇",
-        hashtags: ["#LinkedIn", "#Professional", "#Networking"],
-        characterCount: responseText.length,
-        fullPost: responseText
-      };
-    }
-  } catch (error) {
-    console.error("Error generating LinkedIn post:", error);
-    throw error;
-  }
-}
+//     // Try to parse as JSON, if not, format it manually
+//     try {
+//       console.log(JSON.parse(responseText));
+//       return JSON.parse(responseText);
+//     } catch (parseError) {
+//       // If JSON parsing fails, return a formatted structure
+//       return {
+//         hook: "Generated LinkedIn Post",
+//         content: responseText,
+//         callToAction: "What are your thoughts on this? Share below! 👇",
+//         hashtags: ["#LinkedIn", "#Professional", "#Networking"],
+//         characterCount: responseText.length,
+//         fullPost: responseText
+//       };
+//     }
+//   } catch (error) {
+//     console.error("Error generating LinkedIn post:", error);
+//     throw error;
+//   }
+// }
 
 // app.post("/api/generate-post", async (req, res) => {
 //   try {
@@ -101,7 +76,7 @@ app.use("/user", UserRouter)
 
 
 // Test the function
-generateLinkedInPost("Generate a post on the score between England vs India first test match 2025 at Headingley", "informative");
+// generateLinkedInPost("Generate a post on the score between England vs India first test match 2025 at Headingley", "informative");
 
 async function connectDB() {
   try {

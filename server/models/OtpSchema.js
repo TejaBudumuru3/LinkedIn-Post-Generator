@@ -12,8 +12,9 @@ const OtpSchema = mongo.Schema({
     createdAt:{
         type:Date,
         default:Date.now,
-        expire: 300
+        expires : 300
     }
 });
 
-module.exports = mongo.model("Otp", OtpSchema);
+const OtpModel = mongo.model("Otp", OtpSchema);
+module.exports = { OtpModel };

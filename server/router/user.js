@@ -6,9 +6,10 @@ const jwt = require('jsonwebtoken');
 const axios = require("axios");
 const { GoogleGenAI } = require('@google/genai');
 const { authMiddleware } = require("../middleware/auth");
-const { json } = require("body-parser");
 const { OtpModel } = require("../models/OtpSchema");
 const sendEmail = require("../utils/sendMail");
+const { InferenceClient } = require("@huggingface/inference");
+
 
 const UserRouter = express.Router();
 
@@ -244,6 +245,28 @@ UserRouter.get("/generate-post", authMiddleware, async (req, res) => {
     throw error;
   }
 })
+
+UserRouter.get("/generate-image", authMiddleware, async (req, res) => {
+  const { topic } = req.body;
+
+
+const client = new InferenceClient(process.env.HF_TOKEN);
+
+const image = await client.textToImage({
+    provider: "hf-inference",
+    model: "black-forest-labs/FLUX.1-dev",
+	inputs: topic,
+	parameters: { num_inference_steps: 5 },
+});
+console.log((image))
+
+const arrayBuffer = await image.arrayBuffer();
+const buffer = Buffer.from(arrayBuffer);
+
+res.set('Content-Type', image.type || 'image/jpeg'); // Use detected type if possible
+res.send(buffer);
+});
+/// Use the generated image (it's a Blob)
 
 
 

@@ -189,7 +189,7 @@ UserRouter.post("/verify-otp", async (req, res) => {
   }
 });
 
-
+let responseText="";
 UserRouter.get("/generate-post", authMiddleware, async (req, res) => {
   const GEMINI_API_KEY = process.env.Gemini_Apikey;
   const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
@@ -222,11 +222,12 @@ UserRouter.get("/generate-post", authMiddleware, async (req, res) => {
       model: 'gemini-2.0-flash-001',
       contents: prompt
     });
-    const responseText = response.text;
+    responseText = response.text;
     console.log(`response text: ${responseText}`);
+    
     try {
       console.log(JSON.parse(responseText));
-      res.status(200).json(JSON.parse(responseText));
+      return res.status(200).json(JSON.parse(responseText));
     } catch (parseError) {
       // If JSON parsing fails, return a formatted structure
       return {
@@ -239,7 +240,7 @@ UserRouter.get("/generate-post", authMiddleware, async (req, res) => {
       };
     }
   }
-  catch (e) {
+  catch (error) {
     console.error("Error generating LinkedIn post:", error);
     throw error;
   }
@@ -247,7 +248,7 @@ UserRouter.get("/generate-post", authMiddleware, async (req, res) => {
 
 UserRouter.get("/generate-image", authMiddleware, async (req, res) => {
   try {
-    const { topic } = req.body;
+    const topic  = responseText;
     if (!topic) return res.status(400).json({ error: "Topic is required" });
     const GEMINI_API_KEY = process.env.Gemini_Apikey;
 
@@ -256,7 +257,7 @@ UserRouter.get("/generate-image", authMiddleware, async (req, res) => {
     // Prompt Gemini to generate an image based on the topic
     const response = await ai.models.generateContent({
       model: "gemini-2.0-flash-preview-image-generation",
-      contents: topic,
+      contents: `generate a image relavate to this topic "${topic}"`,
       config: { responseModalities: [Modality.TEXT, Modality.IMAGE] },
     });
 

@@ -13,7 +13,7 @@
     "dev": "nodemon index.js"
   },
   "dependencies": {
-    "@google/genai": "^1.6.0",
+    "@google/generative-ai": "^0.24.1",
     "@huggingface/inference": "^4.0.6",
     "accepts": "^2.0.0",
     "asynckit": "^0.4.0",
@@ -58,6 +58,7 @@
     "has-tostringtag": "^1.0.2",
     "hasown": "^2.0.2",
     "http-errors": "^2.0.0",
+    "huggingface": "^1.4.0",
     "iconv-lite": "^0.6.3",
     "inherits": "^2.0.4",
     "ipaddr.js": "^1.9.1",

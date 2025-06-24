@@ -10,7 +10,6 @@ const { json } = require("body-parser");
 const { OtpModel } = require("../models/OtpSchema");
 const sendEmail = require("../utils/sendMail");
 
-const JWT_SECRET = "SIGHJDHNJDFHNJFDNI"
 const UserRouter = express.Router();
 
 
@@ -110,13 +109,23 @@ UserRouter.get('/auth/linkedin/callback', async (req, res) => {
     const tokenResponse = await axios.post(
       'https://www.linkedin.com/oauth/v2/accessToken',
       params.toString(),
+      withCredentials = true,
       { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
     );
 
     const accessToken = tokenResponse.data.access_token;
+    res.cookie("token", accessToken, {
+        httpOnly: true,
+        secure: false,
+        sameSite: "none",
+        maxAge: 24 * 60 * 60 * 1000 // 1 day
+      })
+      console.log("token is tis ", token)
+      return res.status(200).json({ message: "Login sucess", token: accessToken })
+    
     // You can now store accessToken in your database for this user
 
-    res.send('Access token received!'); // For testing, you can send the token or a success message
+    // res.send('Access token received!'); // For testing, you can send the token or a success message
   } catch (error) {
     console.log(error.response ? error.response.data : error.message);
     res.status(500).send('Error exchanging code for access token');
@@ -165,10 +174,7 @@ UserRouter.post("/verify-otp", async (req, res) => {
 
      
       if (otp === otpRecord.otp) {
-      
         await OtpModel.deleteOne({ email });
-
-        
         await UserModel.updateOne({ email }, { isVerified: true });
         res.status(200).json({ message: "OTP verified successfully" });
       }

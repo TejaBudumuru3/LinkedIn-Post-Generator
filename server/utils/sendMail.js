@@ -1,6 +1,3 @@
-console.log("=== sendMail.js loaded ===");
-console.log("EMAIL_USER:", process.env.EMAIL_USER);
-console.log("EMAIL_PASS:", process.env.EMAIL_PASS);
 const nodemailer = require("nodemailer")
 
 
@@ -20,7 +17,6 @@ async function sendEmail(to,sub,text){
         subject: sub,
         text: text
     });
-    console.log(process.env.EMAIL_USER, " " + process.env.EMAIL_PASS);
 }
 
 module.exports = sendEmail;

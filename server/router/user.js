@@ -189,11 +189,20 @@ UserRouter.post("/verify-otp", async (req, res) => {
   }
 });
 
-let responseText="";
+
 UserRouter.get("/generate-post", authMiddleware, async (req, res) => {
-  const GEMINI_API_KEY = process.env.Gemini_Apikey;
+  const GEMINI_API_KEY = process.env.GEMINI_API;
   const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
   const { topic, tone } = req.body;
+
+  function extractJsonFromMarkdown(text) {
+    return text
+      .replace(/^```json\s*/i, '')
+      .replace(/^```\s*/i, '')
+      .replace(/```$/, '')
+      .trim();
+  }
+
   const prompt = `Generate a LinkedIn post about: "${topic}"
             Requirements:
             - Tone: ${tone}
@@ -207,7 +216,7 @@ UserRouter.get("/generate-post", authMiddleware, async (req, res) => {
             - Include personal insights or experiences if relevant
             - Use bullet points or emojis sparingly but effectively
 
-            Format the response as:
+            Format the response as below do not include any other formatting like `+"``` or text (this is must and should be followed strictly):"+`
             {
             "hook": "attention-grabbing first line",
             "content": "main content paragraphs",
@@ -215,19 +224,54 @@ UserRouter.get("/generate-post", authMiddleware, async (req, res) => {
             "hashtags": ["#hashtag1", "#hashtag2", "#hashtag3"],
             "characterCount": 1234,
             "fullPost": "complete formatted post"
-            }`;
+            } make sure that the response doesn't contain any characters `+"' ``` ' at beginning or end of the response and also make sure that the response is a valid json object and not a stringified json object";
 
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-2.0-flash-001',
       contents: prompt
     });
-    responseText = response.text;
-    console.log(`response text: ${responseText}`);
-    
+
+    const jsonResponse = extractJsonFromMarkdown(response.text);
+
     try {
-      console.log(JSON.parse(responseText));
-      return res.status(200).json(JSON.parse(responseText));
+      const parseJson = JSON.parse(jsonResponse)
+      const responseText = parseJson.fullPost;
+      try{
+        // Prompt Gemini to generate an image based on the topic
+          const imageResponse = await ai.models.generateContent({
+            model: "gemini-2.0-flash-preview-image-generation",
+            contents: `generate an image relavate to this topic "${responseText}"`,
+            config: { responseModalities: [Modality.TEXT, Modality.IMAGE] },
+          });
+
+           // Find the image in the response
+          let imageBase64 = null;
+          let imageMimeType = "image/png";
+          const parts = imageResponse.candidates?.[0]?.content?.parts || [];
+          for (const part of parts) {
+            if (part.inlineData) {
+              imageBase64 = part.inlineData.data;
+              imageMimeType = part.inlineData.mimeType || "image/png";
+              break;
+            }
+          }
+
+          if (!imageBase64) {
+            return res.status(500).json({ error: "No image generated" });
+          }
+
+          // Respond with both text and image (as data URL)
+          return res.status(200).json({
+            postText: parseJson,
+            imageDataUrl: `data:${imageMimeType};base64,${imageBase64}`
+          });
+
+          }
+      catch (err) {
+      console.error(err);
+      res.status(500).json({ error: "Failed to generate image" });
+      }
     } catch (parseError) {
       // If JSON parsing fails, return a formatted structure
       return {
@@ -246,40 +290,18 @@ UserRouter.get("/generate-post", authMiddleware, async (req, res) => {
   }
 })
 
-UserRouter.get("/generate-image", authMiddleware, async (req, res) => {
-  try {
-    const topic  = responseText;
-    if (!topic) return res.status(400).json({ error: "Topic is required" });
-    const GEMINI_API_KEY = process.env.Gemini_Apikey;
+// UserRouter.get("/generate-image", authMiddleware, async (req, res) => {
+//   try {
+//     const topic  = responseText;
+//     if (!topic) return res.status(400).json({ error: "Topic is required" });
+//     const GEMINI_API_KEY = process.env.Gemini_Apikey;
 
-    const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
+//     const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 
-    // Prompt Gemini to generate an image based on the topic
-    const response = await ai.models.generateContent({
-      model: "gemini-2.0-flash-preview-image-generation",
-      contents: `generate a image relavate to this topic "${topic}"`,
-      config: { responseModalities: [Modality.TEXT, Modality.IMAGE] },
-    });
+    
 
-    // Find the image part in the response
-    let imageBuffer;
-    for (const part of response.candidates[0].content.parts) {
-      if (part.inlineData) {
-        imageBuffer = Buffer.from(part.inlineData.data, "base64");
-        break;
-      }
-    }
-
-    if (!imageBuffer) return res.status(500).json({ error: "No image generated" });
-
-    res.set("Content-Type", "image/png");
-    res.send(imageBuffer);
-
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to generate image" });
-  }
-});
+//   } 
+// });
 
 
 

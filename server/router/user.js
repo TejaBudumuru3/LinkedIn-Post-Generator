@@ -129,7 +129,8 @@ UserRouter.get('/auth/linkedin/callback', async (req, res) => {
     // res.send('Access token received!'); // For testing, you can send the token or a success message
   } catch (error) {
     console.log(error.response ? error.response.data : error.message);
-    res.status(500).send('Error exchanging code for access token');
+    const errorMessage = error.response ? JSON.stringify(error.response.data, null, 2) : error.message;
+    res.status(500).send(`<pre>Error exchanging code for access token: ${errorMessage}</pre>`);
   }
 });
 

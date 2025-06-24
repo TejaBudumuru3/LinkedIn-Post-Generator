@@ -263,6 +263,7 @@ console.log((image))
 const arrayBuffer = await image.arrayBuffer();
 const buffer = Buffer.from(arrayBuffer);
 
+
 res.set('Content-Type', image.type || 'image/jpeg'); // Use detected type if possible
 res.send(buffer);
 });

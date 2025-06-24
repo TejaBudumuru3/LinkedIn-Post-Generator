@@ -4,12 +4,10 @@ const { UserModel } = require('../models/userSchema');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const axios = require("axios");
-const { GoogleGenAI } = require('@google/genai');
+const { GoogleGenAI, Modality } = require('@google/genai');
 const { authMiddleware } = require("../middleware/auth");
 const { OtpModel } = require("../models/OtpSchema");
 const sendEmail = require("../utils/sendMail");
-const { InferenceClient } = require("@huggingface/inference");
-
 
 const UserRouter = express.Router();
 
@@ -248,27 +246,40 @@ UserRouter.get("/generate-post", authMiddleware, async (req, res) => {
 })
 
 UserRouter.get("/generate-image", authMiddleware, async (req, res) => {
-  const { topic } = req.body;
+  try {
+    const { topic } = req.body;
+    if (!topic) return res.status(400).json({ error: "Topic is required" });
+    const GEMINI_API_KEY = process.env.Gemini_Apikey;
 
+    const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 
-const client = new InferenceClient(process.env.HF_TOKEN);
+    // Prompt Gemini to generate an image based on the topic
+    const response = await ai.models.generateContent({
+      model: "gemini-2.0-flash-preview-image-generation",
+      contents: topic,
+      config: { responseModalities: [Modality.TEXT, Modality.IMAGE] },
+    });
 
-const image = await client.textToImage({
-    provider: "hf-inference",
-    model: "black-forest-labs/FLUX.1-dev",
-	inputs: topic,
-	parameters: { num_inference_steps: 5 },
+    // Find the image part in the response
+    let imageBuffer;
+    for (const part of response.candidates[0].content.parts) {
+      if (part.inlineData) {
+        imageBuffer = Buffer.from(part.inlineData.data, "base64");
+        break;
+      }
+    }
+
+    if (!imageBuffer) return res.status(500).json({ error: "No image generated" });
+
+    res.set("Content-Type", "image/png");
+    res.send(imageBuffer);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to generate image" });
+  }
 });
-console.log((image))
 
-const arrayBuffer = await image.arrayBuffer();
-const buffer = Buffer.from(arrayBuffer);
-
-
-res.set('Content-Type', image.type || 'image/jpeg'); // Use detected type if possible
-res.send(buffer);
-});
-/// Use the generated image (it's a Blob)
 
 
 

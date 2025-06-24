@@ -5,8 +5,6 @@ const mongoose = require("mongoose");
 const { UserRouter } = require("./router/user");
 const cookieParser = require('cookie-parser');
 const axios = require('axios');
-// const cors = require("cors");
-
 const app = express();
 
 app.use(cors({
@@ -15,58 +13,6 @@ app.use(cors({
 app.use(express.json());
 app.use(cookieParser())
 
-
-
-// LinkedIn Post Generation Function
-// async function generateLinkedInPost(topic, tone) {
-  
-
-//   try {
-//     const response = await ai.models.generateContent({
-//       model: 'gemini-2.0-flash-001',
-//       contents: prompt,
-//     });
-
-//     // Parse the response to extract structured data
-//     const responseText = response.text;
-//     console.log(responseText);
-
-//     // Try to parse as JSON, if not, format it manually
-//     try {
-//       console.log(JSON.parse(responseText));
-//       return JSON.parse(responseText);
-//     } catch (parseError) {
-//       // If JSON parsing fails, return a formatted structure
-//       return {
-//         hook: "Generated LinkedIn Post",
-//         content: responseText,
-//         callToAction: "What are your thoughts on this? Share below! 👇",
-//         hashtags: ["#LinkedIn", "#Professional", "#Networking"],
-//         characterCount: responseText.length,
-//         fullPost: responseText
-//       };
-//     }
-//   } catch (error) {
-//     console.error("Error generating LinkedIn post:", error);
-//     throw error;
-//   }
-// }
-
-// app.post("/api/generate-post", async (req, res) => {
-//   try {
-//     const { topic, tone, industry } = req.body;
-
-//     if (!topic) {
-//       return res.status(400).json({ error: "Topic is required" });
-//     }
-
-//     const post = await generateLinkedInPost(topic, tone);
-//     res.json(post);
-//   } catch (error) {
-//     console.error("Error in generate-post endpoint:", error);
-//     res.status(500).json({ error: "Failed to generate LinkedIn post" });
-//   }
-// });
 
 app.get("/", (req, res) => {
   res.send("LinkedIn Post Generator Server Running");

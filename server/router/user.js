@@ -4,7 +4,7 @@ const { UserModel } = require('../models/userSchema');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const axios = require("axios");
-const { GoogleGenAI } = require('@google/genai');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 const { authMiddleware } = require("../middleware/auth");
 const { OtpModel } = require("../models/OtpSchema");
 const sendEmail = require("../utils/sendMail");
@@ -192,10 +192,10 @@ UserRouter.post("/verify-otp", async (req, res) => {
 });
 
 
-UserRouter.get("/generate-post", authMiddleware, async (req, res) => {
+UserRouter.post("/generate-post", async (req, res) => {
   const GEMINI_API_KEY = process.env.Gemini_Apikey;
-  const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
-  const { topic, tone } = req.body;
+  const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+  const { topic, tone, deepResearch } = req.body;
   const prompt = `Generate a LinkedIn post about: "${topic}"
             Requirements:
             - Tone: ${tone}
@@ -220,34 +220,52 @@ UserRouter.get("/generate-post", authMiddleware, async (req, res) => {
             }`;
 
   try {
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.0-flash-001',
-      contents: prompt
-    });
-    const responseText = response.text;
+    const modelConfig = {
+      model: "gemini-2.5-flash",
+    };
+
+    if (deepResearch) {
+      modelConfig.tools = [{ googleSearch: {} }];
+    }
+
+    const model = genAI.getGenerativeModel(modelConfig);
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const responseText = response.text();
+    const groundingMetadata = response.candidates[0].groundingMetadata;
+
+    if (groundingMetadata) {
+      console.log("Deep research enabled. Grounding metadata:", groundingMetadata);
+    } else {
+      console.log("Deep research disabled or not used by the model for this query.");
+    }
+
     console.log(`response text: ${responseText}`);
     try {
-      console.log(JSON.parse(responseText));
-      res.status(200).json(JSON.parse(responseText));
+      const parsedResponse = JSON.parse(responseText);
+      parsedResponse.groundingMetadata = groundingMetadata;
+      console.log(parsedResponse);
+      res.status(200).json(parsedResponse);
     } catch (parseError) {
       // If JSON parsing fails, return a formatted structure
-      return {
+      res.status(200).json({
         hook: "Generated LinkedIn Post",
         content: responseText,
         callToAction: "What are your thoughts on this? Share below! 👇",
         hashtags: ["#LinkedIn", "#Professional", "#Networking"],
         characterCount: responseText.length,
-        fullPost: responseText
-      };
+        fullPost: responseText,
+        groundingMetadata: groundingMetadata
+      });
     }
   }
   catch (e) {
-    console.error("Error generating LinkedIn post:", error);
-    throw error;
+    console.error("Error generating LinkedIn post:", e);
+    res.status(500).json({ message: "Error generating post" });
   }
-})
+});
 
-UserRouter.get("/generate-image", authMiddleware, async (req, res) => {
+UserRouter.get("/generate-image", async (req, res) => {
   const { topic } = req.body;
 
 

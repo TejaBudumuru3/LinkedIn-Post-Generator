@@ -4,7 +4,7 @@ const cors = require("cors");
 const mongoose = require("mongoose");
 const { UserRouter } = require("./router/user");
 const cookieParser = require('cookie-parser');
-const axios = require('axios');
+
 const app = express();
 
 // CORS Configuration
